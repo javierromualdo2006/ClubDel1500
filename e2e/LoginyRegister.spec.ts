@@ -1,0 +1,34 @@
+import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
+  await page.getByRole('button', { name: 'Inicio de Sesión' }).click();
+  await page.getByRole('link', { name: 'Regístrate aquí' }).click();
+  await page.getByRole('textbox', { name: 'Nombre de usuario' }).click();
+  await page.getByRole('textbox', { name: 'Nombre de usuario' }).fill('test');
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).click();
+  await page.getByRole('textbox', { name: 'Correo electrónico' }).fill('test@gmail.com');
+  await page.getByRole('textbox', { name: 'Contraseña', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Contraseña', exact: true }).fill('test12');
+  await page.getByRole('textbox', { name: 'Confirmar contraseña' }).click();
+  await page.locator('div').filter({ hasText: /^Contraseña$/ }).getByRole('button').click();
+  await page.locator('div').filter({ hasText: /^Confirmar contraseña$/ }).getByRole('button').click();
+  await page.getByRole('textbox', { name: 'Confirmar contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Confirmar contraseña' }).fill('test12');
+  await page.getByRole('checkbox', { name: 'Recibir notificaciones por' }).click();
+  await page.getByText('Recibir notificaciones por emailAcepto los términos y condiciones').click();
+  await page.getByRole('checkbox', { name: 'Acepto los términos y' }).click();
+  await page.getByText('Recibir notificaciones por emailAcepto los términos y condiciones').click();
+  await page.locator('div').filter({ hasText: /^Recibir notificaciones por email$/ }).click();
+  await page.locator('div').filter({ hasText: /^Acepto los términos y condiciones$/ }).click();
+  await page.getByRole('checkbox', { name: 'Recibir notificaciones por' }).click();
+  await page.getByRole('button', { name: 'Crear Cuenta' }).click();
+  await page.getByText('¡Registro Exitoso!Tu cuenta').click();
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('test');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('test12');
+  await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+  await page.locator('div').filter({ hasText: 'testUsuario' }).nth(2).click();
+});

@@ -121,3 +121,9 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+### Playwright-specific ###
+/test-results/         # Resultados temporales (screenshots, traces)
+/playwright-report/    # Reportes HTML generados
+/blob-report/          # Reportes en formato blob (si los generas)
+/playwright/.cache/    # Cache interna

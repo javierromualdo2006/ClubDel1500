@@ -37,7 +37,6 @@ export function CalendarPage() {
     address: "",
     imageUrl: "",
   })
-  const [selectedEventFile, setSelectedEventFile] = useState<File | null>(null)
 
   const months = [
     "Enero",
@@ -103,7 +102,6 @@ export function CalendarPage() {
   const openAddDialog = () => {
     setEditingEvent(null)
     setNewEvent({ title: "", date: "", time: "", description: "", address: "", imageUrl: "" })
-    setSelectedEventFile(null)
     setIsDialogOpen(true)
   }
 
@@ -119,7 +117,6 @@ export function CalendarPage() {
       address: event.address,
       imageUrl: event.imageUrl || "",
     })
-    setSelectedEventFile(null)
     setIsDialogOpen(true)
   }
 
@@ -160,7 +157,6 @@ export function CalendarPage() {
         }
 
         setNewEvent({ title: "", date: "", time: "", description: "", address: "", imageUrl: "" })
-        setSelectedEventFile(null)
         setIsDialogOpen(false)
       } catch (error) {
         console.error("Error saving event:", error)
@@ -174,37 +170,6 @@ export function CalendarPage() {
       setEvents(events.filter((event) => event.id !== eventId))
     } catch (error) {
       console.error("Error deleting event:", error)
-    }
-  }
-
-  const handleEventFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Validate file size (5MB maximum)
-      if (file.size > 5 * 1024 * 1024) {
-        alert("El archivo es demasiado grande. Máximo 5MB permitido.")
-        return
-      }
-
-      // Validate file type
-      const allowedTypes = [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx"]
-      const fileExtension = "." + file.name.split(".").pop()?.toLowerCase()
-
-      if (!allowedTypes.includes(fileExtension)) {
-        alert("Tipo de archivo no permitido. Use JPG, PNG, GIF, PDF, DOC o DOCX.")
-        return
-      }
-
-      setSelectedEventFile(file)
-
-      // If it's an image, create preview URL
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setNewEvent({ ...newEvent, imageUrl: e.target?.result as string })
-        }
-        reader.readAsDataURL(file)
-      }
     }
   }
 
@@ -304,42 +269,13 @@ export function CalendarPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="eventFile">Archivo del evento (opcional)</Label>
+                      <Label htmlFor="imageUrl">URL de la imagen del evento (opcional)</Label>
                       <Input
-                        id="eventFile"
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx"
-                        onChange={handleEventFileChange}
-                        className="cursor-pointer"
+                        id="imageUrl"
+                        value={newEvent.imageUrl}
+                        onChange={(e) => setNewEvent({ ...newEvent, imageUrl: e.target.value })}
+                        placeholder="https://ejemplo.com/imagen.jpg"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Formatos permitidos: JPG, PNG, GIF, PDF, DOC, DOCX (Máximo 5MB)
-                      </p>
-                      {selectedEventFile && (
-                        <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex items-center gap-2">
-                            <ImageIcon className="w-4 h-4 text-blue-600" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-blue-900 truncate">{selectedEventFile.name}</p>
-                              <p className="text-xs text-blue-600">
-                                {(selectedEventFile.size / 1024 / 1024).toFixed(2)} MB • {selectedEventFile.type}
-                              </p>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedEventFile(null)
-                                setNewEvent({ ...newEvent, imageUrl: "" })
-                              }}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
                       {newEvent.imageUrl && (
                         <div className="mt-2">
                           <img

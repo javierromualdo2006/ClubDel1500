@@ -33,56 +33,14 @@ export function RegisterPage() {
   const router = useRouter()
   const { register } = useAuth()
 
-  const validatePassword = (password: string) => {
-    const errors = []
-
-    if (password.length < 8) {
-      errors.push("mínimo 8 caracteres")
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      errors.push("al menos 1 letra mayúscula")
-    }
-
-    if (!/[0-9]/.test(password)) {
-      errors.push("al menos 1 número")
-    }
-
-    return errors
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
-    if (!formData.username.trim()) {
-      setError("El nombre de usuario es obligatorio")
-      setIsLoading(false)
-      return
-    }
-
-    if (!formData.email.trim()) {
-      setError("El correo electrónico es obligatorio")
-      setIsLoading(false)
-      return
-    }
-
-    if (!formData.password) {
-      setError("La contraseña es obligatoria")
-      setIsLoading(false)
-      return
-    }
-
-    if (!formData.confirmPassword) {
-      setError("Debes confirmar tu contraseña")
-      setIsLoading(false)
-      return
-    }
-
-    const passwordErrors = validatePassword(formData.password)
-    if (passwordErrors.length > 0) {
-      setError(`La contraseña debe tener: ${passwordErrors.join(", ")}`)
+    // Validaciones
+    if (!formData.username || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError("Todos los campos son obligatorios")
       setIsLoading(false)
       return
     }
@@ -93,21 +51,28 @@ export function RegisterPage() {
       return
     }
 
-    if (!formData.acceptTerms) {
-      setError("Debes aceptar los términos y condiciones para continuar")
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres")
       setIsLoading(false)
       return
     }
 
-    try {
-      const registrationResult = await register({
+    if (!formData.acceptTerms) {
+      setError("Debes aceptar los términos y condiciones")
+      setIsLoading(false)
+      return
+    }
+
+    // Simular tiempo de procesamiento
+    setTimeout(() => {
+      const registrationSuccess = register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
         emailNotifications: formData.emailNotifications,
       })
 
-      if (registrationResult.success) {
+      if (registrationSuccess) {
         setSuccess(true)
         setIsLoading(false)
 
@@ -116,14 +81,10 @@ export function RegisterPage() {
           router.push("/login")
         }, 2000)
       } else {
-        setError(registrationResult.error || "Error al crear la cuenta. Inténtalo de nuevo.")
+        setError("El usuario o email ya existe")
         setIsLoading(false)
       }
-    } catch (error) {
-      console.error("Registration error:", error)
-      setError("Error de conexión. Verifica tu conexión a internet e inténtalo de nuevo.")
-      setIsLoading(false)
-    }
+    }, 1500)
   }
 
   if (success) {
@@ -207,7 +168,6 @@ export function RegisterPage() {
                   <Label htmlFor="password" className="text-[#000000]">
                     Contraseña
                   </Label>
-                  <p className="text-xs text-gray-500 mb-1">Mínimo 8 caracteres, 1 mayúscula y 1 número</p>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input

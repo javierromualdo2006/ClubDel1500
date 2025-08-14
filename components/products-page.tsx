@@ -34,9 +34,6 @@ export function ProductsPage() {
     mercadoLibreUrl: "",
   })
 
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
-  const [dataUrl, setDataUrl] = useState<string>("")
-
   useEffect(() => {
     loadProducts()
   }, [])
@@ -54,35 +51,15 @@ export function ProductsPage() {
     }
   }
 
-  useEffect(() => {
-    if (selectedImageFile) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setDataUrl((e.target?.result as string) || "")
-      }
-      reader.readAsDataURL(selectedImageFile)
-    } else {
-      setDataUrl("")
-    }
-  }, [selectedImageFile])
-
   const filteredProducts = products.filter(
     (product) =>
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const handleImageFileChange = (file: File | null) => {
-    setSelectedImageFile(file)
-    if (file) {
-      setFormData({ ...formData, imageUrl: "" })
-    }
-  }
-
   const openAddDialog = () => {
     setEditingProduct(null)
     setFormData({ name: "", description: "", price: "", imageUrl: "", mercadoLibreUrl: "" })
-    setSelectedImageFile(null)
     setIsDialogOpen(true)
   }
 
@@ -95,7 +72,6 @@ export function ProductsPage() {
       imageUrl: product.imageUrl || "",
       mercadoLibreUrl: product.mercadoLibreUrl || "",
     })
-    setSelectedImageFile(null)
     setIsDialogOpen(true)
   }
 
@@ -111,8 +87,7 @@ export function ProductsPage() {
               price: formData.price,
               imageUrl: formData.imageUrl || undefined,
               mercadoLibreUrl: formData.mercadoLibreUrl || undefined,
-            },
-            selectedImageFile || undefined,
+            }
           )
 
           if (updatedProduct) {
@@ -127,8 +102,7 @@ export function ProductsPage() {
               imageUrl: formData.imageUrl || undefined,
               mercadoLibreUrl: formData.mercadoLibreUrl || undefined,
               createdBy: currentUser.id,
-            },
-            selectedImageFile || undefined,
+            }
           )
 
           await loadProducts()
@@ -136,7 +110,6 @@ export function ProductsPage() {
 
         setIsDialogOpen(false)
         setFormData({ name: "", description: "", price: "", imageUrl: "", mercadoLibreUrl: "" })
-        setSelectedImageFile(null)
       } catch (error) {
         console.error("Error guardando producto:", error)
         alert("Error guardando producto")
@@ -270,7 +243,7 @@ export function ProductsPage() {
                       </div>
                       <div>
                         <Label htmlFor="mercadoLibreUrl" className="text-sm">
-                          Link de MercadoLibre (opcional)
+                          Link de MercadoLibre 
                         </Label>
                         <Input
                           id="mercadoLibreUrl"
@@ -282,45 +255,28 @@ export function ProductsPage() {
                       </div>
                       <div>
                         <Label htmlFor="image" className="text-sm">
-                          Imagen del producto
+                          URL de la imagen del producto
                         </Label>
-                        <div className="space-y-3 mt-1">
-                          <Input
-                            id="image-file"
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0] || null
-                              handleImageFileChange(file)
-                            }}
-                            className="cursor-pointer text-sm"
-                          />
-                          <div className="text-xs text-gray-500">O ingresa una URL de imagen:</div>
-                          <Input
-                            id="image-url"
-                            value={formData.imageUrl || ""}
-                            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                            placeholder="https://ejemplo.com/imagen.jpg"
-                            className="text-sm"
-                          />
-                          {(selectedImageFile || formData.imageUrl) && (
-                            <div className="mt-2">
-                              <p className="text-xs text-gray-600 mb-2">Vista previa:</p>
-                              <img
-                                src={
-                                  selectedImageFile && dataUrl
-                                    ? dataUrl
-                                    : formData.imageUrl || "/placeholder.svg?height=120&width=120&text=Producto"
-                                }
-                                alt="Vista previa del producto"
-                                className="w-24 h-24 object-cover rounded border"
-                                onError={(e) => {
-                                  e.currentTarget.src = "/placeholder.svg?height=120&width=120&text=Error"
-                                }}
-                              />
-                            </div>
-                          )}
-                        </div>
+                        <Input
+                          id="image-url"
+                          value={formData.imageUrl || ""}
+                          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                          placeholder="https://ejemplo.com/imagen.jpg"
+                          className="text-sm"
+                        />
+                        {formData.imageUrl && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-600 mb-2">Vista previa:</p>
+                            <img
+                              src={formData.imageUrl || "/placeholder.svg?height=120&width=120&text=Producto"}
+                              alt="Vista previa del producto"
+                              className="w-24 h-24 object-cover rounded border"
+                              onError={(e) => {
+                                e.currentTarget.src = "/placeholder.svg?height=120&width=120&text=Error"
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="flex gap-2 pt-4">
                         <Button onClick={handleSubmit} className="bg-[#004386] hover:bg-[#005ea6] flex-1 text-sm">

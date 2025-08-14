@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { Footer } from "./footer"
 import { useAuth } from "@/contexts/auth-context"
-import { contentAPI } from "@/lib/api/content-api" // Fixed import path
+import { contentAPI } from "@/lib/api/content-api"
 
 interface ContentElement {
   id: string
@@ -84,7 +84,7 @@ export function ContentPage() {
     }
   }, [])
 
-  // Limpiar objetos URL al desmontar
+  // Clean up when unmounting
   useEffect(() => {
     return () => {
       editElements.forEach((el) => {
@@ -101,46 +101,6 @@ export function ContentPage() {
       })
     }
   }, [editElements])
-
-  const handleFileChange = (elementId: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert("El archivo es demasiado grande. Máximo 10MB permitido.")
-        return
-      }
-
-      const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
-      if (!allowedTypes.includes(file.type)) {
-        alert("Tipo de archivo no permitido. Use JPG, PNG o GIF.")
-        return
-      }
-
-      const imageUrl = URL.createObjectURL(file)
-
-      setEditElements(
-        editElements.map((el) => (el.id === elementId ? { ...el, imageUrl, imageAlt: el.imageAlt || file.name } : el)),
-      )
-    }
-  }
-
-  const handleSliderFileChange = (elementId: string, imageIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        alert("El archivo es demasiado grande. Máximo 10MB permitido.")
-        return
-      }
-
-      const allowedTypes = ["image/jpeg", "image/png", "image/gif"]
-      if (!allowedTypes.includes(file.type)) {
-        alert("Tipo de archivo no permitido. Use JPG, PNG o GIF.")
-        return
-      }
-
-      updateSliderImage(elementId, imageIndex, "url", URL.createObjectURL(file))
-    }
-  }
 
   const handleEditCard = (cardId: string) => {
     const card = contentCards.find((c) => c.id === cardId)
@@ -167,13 +127,12 @@ export function ContentPage() {
       setEditingCardId(null)
       setEditElements([])
       setEditCardTitle("")
-      // Save to database when saving card
       contentAPI.saveAll(updatedCards)
     }
   }
 
   const handleCancelEdit = () => {
-    // Limpiar URLs temporales
+    // Clean up temporary URLs
     editElements.forEach((el) => {
       if (el.type === "image" && el.imageUrl?.startsWith("blob:")) {
         URL.revokeObjectURL(el.imageUrl)
@@ -211,14 +170,12 @@ export function ContentPage() {
     }
     const updatedCards = [...contentCards, newCard]
     setContentCards(updatedCards)
-    // Save to database when adding new card
     contentAPI.saveAll(updatedCards)
   }
 
   const deleteCard = (cardId: string) => {
     const updatedCards = contentCards.filter((card) => card.id !== cardId)
     setContentCards(updatedCards)
-    // Save to database when deleting card
     contentAPI.saveAll(updatedCards)
   }
 
@@ -226,19 +183,10 @@ export function ContentPage() {
     const newElement: ContentElement = {
       id: Date.now().toString(),
       type,
-      content:
-        type === "title"
-          ? "Nuevo Título"
-          : type === "paragraph"
-            ? "Nuevo texto. Escribe aquí tu contenido."
-            : type === "link"
-              ? "Nuevo Link"
-              : type === "image"
-                ? "Nueva Imagen"
-                : "Nuevo Slider",
+      content: "", // Dejamos el contenido vacío inicialmente
       ...(type === "link" && {
         url: "https://ejemplo.com",
-        linkText: "Nuevo Link",
+        linkText: "", // Texto vacío para que el usuario pueda escribir
       }),
       ...(type === "image" && {
         imageUrl: "/placeholder.svg?height=300&width=600&text=Nueva+Imagen",
@@ -251,9 +199,22 @@ export function ContentPage() {
           { url: "/placeholder.svg?height=300&width=600&text=Imagen+3", alt: "Imagen 3", caption: "Tercera imagen" },
         ],
       }),
+    };
+  
+    // Solo establecemos el contenido por defecto si no es un link
+    if (type !== "link") {
+      newElement.content = 
+        type === "title"
+          ? "Nuevo Título"
+          : type === "paragraph"
+            ? "Nuevo texto. Escribe aquí tu contenido."
+            : type === "image"
+              ? "Nueva Imagen"
+              : "Nuevo Slider";
     }
-    setEditElements([...editElements, newElement])
-  }
+  
+    setEditElements([...editElements, newElement]);
+  };
 
   const updateElement = (id: string, field: string, value: string) => {
     setEditElements(editElements.map((el) => (el.id === id ? { ...el, [field]: value } : el)))
@@ -338,7 +299,7 @@ export function ContentPage() {
     const updatedElements = [...editElements]
     const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
 
-    // Intercambiar elementos
+    // Swap elements
     const temp = updatedElements[currentIndex]
     updatedElements[currentIndex] = updatedElements[targetIndex]
     updatedElements[targetIndex] = temp
@@ -429,7 +390,7 @@ export function ContentPage() {
                 }}
               />
 
-              {/* Controles de navegación */}
+              {/* Navigation controls */}
               {element.images.length > 1 && (
                 <>
                   <Button
@@ -459,7 +420,7 @@ export function ContentPage() {
               )}
             </div>
 
-            {/* Indicadores */}
+            {/* Indicators */}
             {element.images.length > 1 && (
               <div className="flex justify-center mt-4 space-x-2">
                 {element.images.map((_, index) => (
@@ -474,7 +435,7 @@ export function ContentPage() {
               </div>
             )}
 
-            {/* Contador */}
+            {/* Counter */}
             {element.images.length > 1 && (
               <div className="text-center mt-2 text-sm text-gray-600">
                 {currentSlide + 1} de {element.images.length}
@@ -582,17 +543,16 @@ export function ContentPage() {
         ) : element.type === "image" ? (
           <div className="space-y-3">
             <div>
-              <label htmlFor={`imageFile-${element.id}`} className="text-sm font-medium">
-                Subir imagen
+              <label htmlFor={`imageUrl-${element.id}`} className="text-sm font-medium">
+                URL de la imagen
               </label>
               <Input
-                id={`imageFile-${element.id}`}
-                type="file"
-                accept=".jpg,.jpeg,.png,.gif"
-                onChange={(e) => handleFileChange(element.id, e)}
-                className="cursor-pointer mt-1"
+                id={`imageUrl-${element.id}`}
+                value={element.imageUrl || ""}
+                onChange={(e) => updateElement(element.id, "imageUrl", e.target.value)}
+                placeholder="https://ejemplo.com/imagen.jpg"
+                className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">Formatos permitidos: JPG, PNG, GIF (Máximo 10MB)</p>
             </div>
 
             <div>
@@ -656,12 +616,12 @@ export function ContentPage() {
 
                   <div className="space-y-2">
                     <div>
-                      <label className="text-xs">Subir imagen:</label>
+                      <label className="text-xs">URL de la imagen:</label>
                       <Input
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.gif"
-                        onChange={(e) => handleSliderFileChange(element.id, imageIndex, e)}
-                        className="cursor-pointer text-xs"
+                        value={image.url}
+                        onChange={(e) => updateSliderImage(element.id, imageIndex, "url", e.target.value)}
+                        placeholder="https://ejemplo.com/imagen.jpg"
+                        className="text-xs"
                       />
                     </div>
 

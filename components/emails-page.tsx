@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,6 @@ import { Send, Mail, Users, CheckCircle, AlertCircle, TestTube } from "lucide-re
 import { Footer } from "./footer"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import { sendMassEmail, type EmailRecipient } from "@/lib/api/emails"
 
 interface EmailData {
@@ -46,6 +45,7 @@ export function EmailsPage() {
   const [statusMessage, setStatusMessage] = useState("")
   const [includeAdmin, setIncludeAdmin] = useState(false)
 
+  // Corrección: Mover redirecciones a useEffect
   useEffect(() => {
     if (!currentUser) {
       router.push("/login")

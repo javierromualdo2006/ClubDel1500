@@ -1,0 +1,34 @@
+import { test, expect } from '@playwright/test';
+
+test('test', async ({ page }) => {
+  await page.goto('http://localhost:3000/');
+  await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
+  await page.getByRole('button', { name: 'Inicio de Sesión' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).click();
+  await page.getByRole('textbox', { name: 'Usuario' }).fill('USER_ADMIN');
+  await page.getByRole('textbox', { name: 'Contraseña' }).click();
+  await page.getByRole('textbox', { name: 'Contraseña' }).fill('PASSWORD_ADMIN');
+  await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
+  await page.getByRole('button').filter({ hasText: /^$/ }).first().click();
+  await page.getByRole('button', { name: 'Calendario' }).click();
+  await page.getByRole('button').filter({ hasText: /^$/ }).nth(4).click();
+  await page.getByRole('button').filter({ hasText: /^$/ }).nth(3).click();
+  await page.getByText('Agosto 2025DomLunMarMié').click();
+  await page.getByRole('button', { name: 'Nuevo Evento' }).click();
+  await page.getByRole('textbox', { name: 'Título del evento' }).fill('test');
+  await page.getByRole('textbox', { name: 'Fecha' }).fill('2025-08-15');
+  await page.getByRole('textbox', { name: 'Hora' }).click();
+  await page.getByRole('textbox', { name: 'Hora' }).fill('23:59');
+  await page.getByRole('textbox', { name: 'Dirección del evento' }).click();
+  await page.getByRole('textbox', { name: 'Dirección del evento' }).fill('sala de');
+  await page.getByRole('textbox', { name: 'Descripción' }).click();
+  await page.getByRole('textbox', { name: 'Descripción' }).fill('test');
+  await page.getByRole('button', { name: 'Agregar Evento' }).click();
+  await page.getByRole('main').getByRole('button').filter({ hasText: /^$/ }).nth(2).click();
+  await page.getByRole('button').filter({ hasText: /^$/ }).click();
+  await page.getByRole('main').getByRole('button').filter({ hasText: /^$/ }).nth(3).click();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('main').getByRole('button').filter({ hasText: /^$/ }).nth(4).click();
+  await page.getByRole('button').filter({ hasText: /^$/ }).nth(1).click();
+  await page.getByRole('link', { name: 'Club del 1500 Oficial' }).click();
+});
