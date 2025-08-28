@@ -1,8 +1,10 @@
+// app/layout.tsx
 import type React from "react"
 import type { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
 import { AuthProvider } from "@/contexts/auth-context"
+import { DatabaseConnectionHandler } from "@/components/database-connection-handler" // ← Cambiado a default import
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff2",
@@ -25,13 +27,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <DatabaseConnectionHandler>
+          <AuthProvider>{children}</AuthProvider>
+        </DatabaseConnectionHandler>
       </body>
     </html>
   )

@@ -1,191 +1,369 @@
-import { LocalStorage } from "../storage"
+// lib/api/users.ts
+import { getPB, ensureConnection } from '@/lib/pocketbase';
 
 export interface User {
-  id: string
-  username: string
-  email: string
-  role: "admin" | "user"
-  isActive: boolean
-  emailNotifications: boolean
-  createdAt: string
-  updatedAt: string
-  lastLogin?: string
-}
-
-export interface LoginCredentials {
-  username: string
-  password: string
+  id: string;
+  email: string;
+  username?: string;
+  name?: string;
+  avatar?: string;
+  role: 'admin' | 'user';
+  verified: boolean;
+  created: string;
+  updated: string;
+  emailVisibility?: boolean;
+  feature?: any;
+  archive?: boolean;
+  emailNotifications?: boolean;
+  tokenRecy?: string;
 }
 
 export interface RegisterData {
-  username: string
-  email: string
-  password: string
-  emailNotifications: boolean
+  email: string;
+  password: string;
+  passwordConfirm: string;
+  username?: string;
+  name?: string;
+  role?: 'admin' | 'user';
+  tokenizer?: string;
+  emailVisibility?: boolean;
+  tokenRecy?: string;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface LoginResult {
+  success: boolean;
+  user?: User;
+  error?: string;
 }
 
 export class UsersAPI {
-  private static STORAGE_KEY = "users"
-  private static CURRENT_USER_KEY = "current_user"
-
-  static async getAll(): Promise<User[]> {
-    return LocalStorage.get<User[]>(this.STORAGE_KEY, this.getDefaultUsers())
+  private static async ensureConnection(): Promise<void> {
+    try {
+      await ensureConnection("http://127.0.0.1:8090");
+    } catch (error) {
+      console.error('Error conectando a PocketBase:', error);
+      throw new Error('No se pudo conectar a la base de datos');
+    }
   }
 
-  static async getById(id: string): Promise<User | null> {
-    const users = await this.getAll()
-    return users.find((u) => u.id === id) || null
+  private static mapUser(record: any): User {
+    return {
+      id: record.id,
+      email: record.email,
+      username: record.username,
+      name: record.name,
+      avatar: record.avatar,
+      role: record.role || record.rule || 'user',
+      verified: record.verified || false,
+      created: record.created,
+      updated: record.updated,
+      emailVisibility: record.emailVisibility,
+      feature: record.feature,
+      archive: record.archive,
+      emailNotifications: record.emailNotifications,
+      tokenRecy: record.tokenRecy
+    };
   }
 
   static async getCurrentUser(): Promise<User | null> {
-    return LocalStorage.get<User | null>(this.CURRENT_USER_KEY, null)
-  }
-
-  static async login(credentials: LoginCredentials): Promise<{ success: boolean; user?: User; error?: string }> {
-    const users = await this.getAll()
-
-    // Validación específica para admin
-    if (credentials.username === "admin" && credentials.password === "123") {
-      const adminUser = users.find((u) => u.username === "admin")
-      if (adminUser && adminUser.isActive) {
-        const updatedUser = { ...adminUser, lastLogin: new Date().toISOString() }
-        await this.updateUser(adminUser.id, { lastLogin: updatedUser.lastLogin })
-        LocalStorage.set(this.CURRENT_USER_KEY, updatedUser)
-        return { success: true, user: updatedUser }
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      if (!pb.authStore.isValid || !pb.authStore.model) {
+        return null;
       }
+      
+      const user = pb.authStore.model;
+      return this.mapUser(user);
+      
+    } catch (error: any) {
+      console.error("Error getting current user:", error);
+      return null;
     }
-
-    // Para otros usuarios, cualquier contraseña funciona (excepto admin)
-    const user = users.find((u) => u.username === credentials.username && u.isActive && u.username !== "admin")
-
-    if (user) {
-      const updatedUser = { ...user, lastLogin: new Date().toISOString() }
-      await this.updateUser(user.id, { lastLogin: updatedUser.lastLogin })
-      LocalStorage.set(this.CURRENT_USER_KEY, updatedUser)
-      return { success: true, user: updatedUser }
-    }
-
-    return { success: false, error: "Credenciales inválidas" }
   }
 
-  static async logout(): Promise<void> {
-    LocalStorage.remove(this.CURRENT_USER_KEY)
+  static async login(credentials: LoginData): Promise<LoginResult> {
+    try {
+      console.log('🔐 Intentando autenticar:', credentials.email);
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      const authData = await pb.collection('users').authWithPassword(
+        credentials.email,
+        credentials.password
+      );
+      
+      console.log('✅ Autenticación exitosa');
+      
+      return {
+        success: true,
+        user: this.mapUser(authData.record)
+      };
+      
+    } catch (error: any) {
+      console.error('❌ Error en autenticación:', error);
+      
+      return {
+        success: false,
+        error: error.data?.message || 'Error de autenticación'
+      };
+    }
+  }
+
+  static async getAll(options?: { signal?: AbortSignal }): Promise<User[]> {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      if (!pb.authStore.isValid) {
+        console.log('⚠ No autenticado, no se pueden obtener usuarios');
+        return [];
+      }
+      
+      const users = await pb.collection('users').getFullList({
+        signal: options?.signal,
+        requestKey: 'get_all_users'
+      });
+      return users.map(user => this.mapUser(user));
+    } catch (error: any) {
+      if (error.status === 401) {
+        console.log('⚠ No autorizado para obtener usuarios');
+        return [];
+      }
+      console.error("Error obteniendo usuarios:", error);
+      return [];
+    }
   }
 
   static async register(userData: RegisterData): Promise<{ success: boolean; user?: User; error?: string }> {
-    const users = await this.getAll()
-
-    const existingUsername = users.find((u) => u.username.toLowerCase() === userData.username.toLowerCase())
-    const existingEmail = users.find((u) => u.email.toLowerCase() === userData.email.toLowerCase())
-
-    if (existingUsername && existingEmail) {
-      return { success: false, error: "El nombre de usuario y el email ya están en uso" }
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      console.log("🔧 Iniciando proceso de registro...");
+  
+      // Asegurarnos de que ambos campos tengan valores
+      const passwordConfirm = userData.passwordConfirm || userData.password;
+  
+      // Datos mínimos y esenciales - enviar AMBOS campos
+      const dataToSend: any = {
+        email: userData.email,
+        password: userData.password,
+        passwordConfirm: passwordConfirm, // ← Campo 1
+        confirmPassword: passwordConfirm, // ← Campo 2 (añadir este)
+        emailVisibility: true,
+        verified: false
+      };
+  
+      // Solo añadir campos adicionales si tienen valor
+      if (userData.name) dataToSend.name = userData.name;
+      if (userData.username) dataToSend.username = userData.username;
+      if (userData.role) dataToSend.role = userData.role;
+  
+      console.log("📤 Enviando datos a PocketBase:", { 
+        ...dataToSend, 
+        password: '***', 
+        passwordConfirm: '***',
+        confirmPassword: '***'
+      });
+  
+      try {
+        const createdUser = await pb.collection('users').create(dataToSend);
+        console.log("✅ Registro exitoso");
+        return { 
+          success: true, 
+          user: this.mapUser(createdUser) 
+        };
+        
+      } catch (error: any) {
+        // LOGGING MEJORADO - Buscar errores en cualquier propiedad
+        console.error("🔍 BUSCANDO ERRORES EN TODAS LAS PROPIEDADES:");
+        
+        // Recorrer todas las propiedades del error
+        for (const key in error) {
+          if (error.hasOwnProperty(key)) {
+            console.error(`   ${key}:`, error[key]);
+            
+            // Si es un objeto, mostrar sus propiedades también
+            if (typeof error[key] === 'object' && error[key] !== null) {
+              for (const subKey in error[key]) {
+                if (error[key].hasOwnProperty(subKey)) {
+                  console.error(`     ${subKey}:`, error[key][subKey]);
+                }
+              }
+            }
+          }
+        }
+        
+        if (error.data?.data) {
+          const errors: string[] = [];
+          Object.entries(error.data.data).forEach(([field, errorDetail]: [string, any]) => {
+            const errorMsg = `${field}: ${errorDetail.message} (código: ${errorDetail.code})`;
+            console.error("   ", errorMsg);
+            errors.push(errorMsg);
+          });
+          
+          return {
+            success: false,
+            error: "Errores de validación:\n" + errors.join("\n")
+          };
+        }
+        
+        return {
+          success: false,
+          error: error.data?.message || error.message || "Error desconocido en el registro"
+        };
+      }
+      
+    } catch (error: any) {
+      console.error("💥 Error inesperado en registro:", error);
+      return {
+        success: false,
+        error: "Error de conexión: " + error.message
+      };
     }
-
-    if (existingUsername) {
-      return { success: false, error: "El nombre de usuario ya está en uso" }
-    }
-
-    if (existingEmail) {
-      return { success: false, error: "El email ya está registrado" }
-    }
-
-    const newUser: User = {
-      id: Date.now().toString(),
-      username: userData.username,
-      email: userData.email,
-      role: "user",
-      isActive: true,
-      emailNotifications: userData.emailNotifications,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-
-    users.push(newUser)
-    LocalStorage.set(this.STORAGE_KEY, users)
-
-    return { success: true, user: newUser }
   }
 
-  static async updateUser(id: string, userData: Partial<User>): Promise<User | null> {
-    const users = await this.getAll()
-    const index = users.findIndex((u) => u.id === id)
-
-    if (index === -1) return null
-
-    const updatedUser: User = {
-      ...users[index],
-      ...userData,
-      updatedAt: new Date().toISOString(),
+  static async debugRegistration(userData: RegisterData) {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      console.log("🐛 DEBUG: Probando registro paso a paso");
+      
+      // Asegurar ambos campos
+      const passwordConfirm = userData.passwordConfirm || userData.password;
+  
+      // Prueba 1: Datos mínimos
+      const testData1 = {
+        email: userData.email,
+        password: userData.password,
+        passwordConfirm: passwordConfirm, // ← Campo 1
+        confirmPassword: passwordConfirm, // ← Campo 2 (añadir este)
+        emailVisibility: true
+      };
+      
+      console.log("🐛 DEBUG: Probando con datos mínimos", testData1);
+      try {
+        const result1 = await pb.collection('users').create(testData1);
+        console.log("✅ DEBUG: Registro mínimo exitoso");
+        return result1;
+      } catch (error1: any) {
+        console.error("❌ DEBUG: Error con datos mínimos", error1.data);
+        
+        // Prueba 2: Con nombre
+        const testData2 = { ...testData1, name: userData.name || "Test User" };
+        console.log("🐛 DEBUG: Probando con nombre", testData2);
+        try {
+          const result2 = await pb.collection('users').create(testData2);
+          console.log("✅ DEBUG: Registro con nombre exitoso");
+          return result2;
+        } catch (error2: any) {
+          console.error("❌ DEBUG: Error con nombre", error2.data);
+          throw error2;
+        }
+      }
+      
+    } catch (error: any) {
+      console.error("🐛 DEBUG: Error completo en debug", error);
+      throw error;
     }
+  }
 
-    users[index] = updatedUser
-    LocalStorage.set(this.STORAGE_KEY, users)
-
-    // Actualizar usuario actual si es el mismo
-    const currentUser = await this.getCurrentUser()
-    if (currentUser && currentUser.id === id) {
-      LocalStorage.set(this.CURRENT_USER_KEY, updatedUser)
+  static async logout(): Promise<{ success: boolean }> {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      pb.authStore.clear();
+      return { success: true };
+    } catch (error) {
+      console.error("Error en logout:", error);
+      return { success: false };
     }
-
-    return updatedUser
   }
 
-  static async updateUserRole(id: string, role: "admin" | "user"): Promise<boolean> {
-    const result = await this.updateUser(id, { role })
-    return result !== null
+  static async checkConnection(): Promise<boolean> {
+    try {
+      await this.ensureConnection();
+      
+      // Prueba de conexión simple que no requiere autenticación
+      const pb = getPB();
+      await pb.health.check();
+      
+      return true;
+    } catch (error) {
+      console.error("❌ Error de conexión:", error);
+      return false;
+    }
   }
 
-  static async toggleUserStatus(id: string): Promise<boolean> {
-    const user = await this.getById(id)
-    if (!user) return false
-
-    const result = await this.updateUser(id, { isActive: !user.isActive })
-    return result !== null
+  static async testSimpleRegistration(): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      const testData = {
+        email: `test_${Date.now()}@example.com`,
+        password: 'testpassword123',
+        passwordConfirm: 'testpassword123', // ← Campo 1
+        confirmPassword: 'testpassword123', // ← Campo 2 (añadir este)
+        emailVisibility: true,
+        name: 'Test User'
+      };
+      
+      console.log("🧪 Probando registro simple:", { 
+        ...testData, 
+        password: '***', 
+        passwordConfirm: '***',
+        confirmPassword: '***'
+      });
+      
+      try {
+        const result = await pb.collection('users').create(testData);
+        console.log("✅ Prueba de registro exitosa");
+        return { success: true };
+      } catch (error: any) {
+        // LOGGING SUPER DETALLADO
+        console.error("=".repeat(80));
+        console.error("❌❌❌ ERROR COMPLETO DE REGISTRO ❌❌❌");
+        console.error("=".repeat(80));
+        
+        console.error("📍 Error object:", error);
+        console.error("📍 Error type:", typeof error);
+        
+        if (error.data) {
+          console.error("📋 error.data:", error.data);
+          if (error.data.data) {
+            console.error("🔍 Validation errors:", error.data.data);
+            Object.entries(error.data.data).forEach(([field, errorDetail]: [string, any]) => {
+              console.error(`   ${field}:`, errorDetail);
+            });
+          }
+        }
+        
+        console.error("=".repeat(80));
+        
+        return {
+          success: false,
+          error: "Error completo en consola"
+        };
+      }
+      
+    } catch (error: any) {
+      console.error("💥 Error inesperado en testSimpleRegistration:", error);
+      return {
+        success: false,
+        error: "Error inesperado: " + error.message
+      };
+    }
   }
-
-  private static getDefaultUsers(): User[] {
-    return [
-      {
-        id: "1",
-        username: "admin",
-        email: "admin@sistema.com",
-        role: "admin",
-        isActive: true,
-        emailNotifications: true,
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-01T00:00:00.000Z",
-      },
-      {
-        id: "2",
-        username: "usuario",
-        email: "usuario@sistema.com",
-        role: "user",
-        isActive: true,
-        emailNotifications: false,
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-01T00:00:00.000Z",
-      },
-      {
-        id: "3",
-        username: "juan",
-        email: "juan@sistema.com",
-        role: "user",
-        isActive: true,
-        emailNotifications: true,
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-01T00:00:00.000Z",
-      },
-      {
-        id: "4",
-        username: "maria",
-        email: "maria@sistema.com",
-        role: "user",
-        isActive: false,
-        emailNotifications: false,
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-01T00:00:00.000Z",
-      },
-    ]
-  }
+}
+if (typeof window !== 'undefined') {
+  (window as any).UsersAPI = UsersAPI;
 }
