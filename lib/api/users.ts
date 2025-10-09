@@ -7,7 +7,7 @@ export interface User {
   username?: string;
   name?: string;
   avatar?: string;
-  role: 'admin' | 'user';
+  role: string; // ← Hacer más flexible
   verified: boolean;
   created: string;
   updated: string;
@@ -24,7 +24,7 @@ export interface RegisterData {
   passwordConfirm: string;
   username?: string;
   name?: string;
-  role?: 'admin' | 'user';
+  role?: string;
   tokenizer?: string;
   emailVisibility?: boolean;
   tokenRecy?: string;
@@ -58,7 +58,7 @@ export class UsersAPI {
       username: record.username,
       name: record.name,
       avatar: record.avatar,
-      role: record.role || record.rule || 'user',
+      role: record.role || 'user',
       verified: record.verified || false,
       created: record.created,
       updated: record.updated,
@@ -151,27 +151,58 @@ export class UsersAPI {
       // Asegurarnos de que ambos campos tengan valores
       const passwordConfirm = userData.passwordConfirm || userData.password;
   
-      // Datos mínimos y esenciales - enviar AMBOS campos
+      // DEBUG: Verificar qué valores estamos recibiendo
+      console.log("🐛 DEBUG - Datos recibidos:", {
+        email: userData.email,
+        hasName: !!userData.name,
+        hasUsername: !!userData.username,
+        hasRole: !!userData.role,
+        roleValue: userData.role
+      });
+  
+      // PRUEBA: Diferentes enfoques para el campo role
+      let roleValue = "user";
+      
+      // Si viene un role específico, usarlo
+      if (userData.role && userData.role.trim() !== "") {
+        roleValue = userData.role;
+      }
+      
+      // Si el role está vacío pero tenemos username, usar eso
+      if (!roleValue || roleValue.trim() === "") {
+        roleValue = userData.username || "user";
+      }
+
+      // Asegurar que name no esté vacío
+      let nameValue = userData.name || userData.username || `User_${Date.now()}`;
+      if (nameValue.trim() === "") {
+        nameValue = `User_${Date.now()}`;
+      }
+
+      // Datos mínimos y esenciales
       const dataToSend: any = {
         email: userData.email,
         password: userData.password,
-        passwordConfirm: passwordConfirm, // ← Campo 1
-        confirmPassword: passwordConfirm, // ← Campo 2 (añadir este)
+        passwordConfirm: passwordConfirm,
         emailVisibility: true,
-        verified: false
+        verified: false,
+        name: nameValue,
+        role: roleValue
       };
   
       // Solo añadir campos adicionales si tienen valor
-      if (userData.name) dataToSend.name = userData.name;
-      if (userData.username) dataToSend.username = userData.username;
-      if (userData.role) dataToSend.role = userData.role;
+      if (userData.username && userData.username.trim() !== "") {
+        dataToSend.username = userData.username;
+      }
   
       console.log("📤 Enviando datos a PocketBase:", { 
         ...dataToSend, 
         password: '***', 
-        passwordConfirm: '***',
-        confirmPassword: '***'
+        passwordConfirm: '***'
       });
+
+      // DEBUG EXTRA: Verificar la estructura final
+      console.log("🐛 DEBUG - Estructura final:", JSON.stringify(dataToSend, null, 2));
   
       try {
         const createdUser = await pb.collection('users').create(dataToSend);
@@ -230,6 +261,72 @@ export class UsersAPI {
     }
   }
 
+  // NUEVO MÉTODO: Probar diferentes valores para role
+  static async testRoleValues(): Promise<void> {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      const testValues = [
+        "user",
+        "admin", 
+        "member",
+        "client",
+        "customer",
+        "basic",
+        "standard",
+        "default"
+      ];
+      
+      console.log("🧪 Probando diferentes valores para role:");
+      
+      for (const roleValue of testValues) {
+        const testData = {
+          email: `test_${Date.now()}_${roleValue}@example.com`,
+          password: 'testpassword123',
+          passwordConfirm: 'testpassword123',
+          emailVisibility: true,
+          name: `Test ${roleValue}`,
+          role: roleValue
+        };
+        
+        console.log(`   Probando role: "${roleValue}"`);
+        
+        try {
+          const result = await pb.collection('users').create(testData);
+          console.log(`   ✅ ÉXITO con role: "${roleValue}"`);
+          // Eliminar el usuario de prueba
+          await pb.collection('users').delete(result.id);
+          break;
+        } catch (error: any) {
+          console.log(`   ❌ FALLÓ con role: "${roleValue}" - ${error.data?.data?.role?.message || error.message}`);
+        }
+      }
+      
+    } catch (error) {
+      console.error("❌ Error en testRoleValues:", error);
+    }
+  }
+
+  // NUEVO MÉTODO: Verificar usuarios existentes para ver qué roles tienen
+  static async checkExistingUsers(): Promise<void> {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      // Obtener algunos usuarios existentes (si los hay)
+      const users = await pb.collection('users').getList(1, 5);
+      
+      console.log("🔍 Usuarios existentes y sus roles:");
+      users.items.forEach(user => {
+        console.log(`   - ${user.email}: role="${user.role}", name="${user.name}"`);
+      });
+      
+    } catch (error) {
+      console.error("❌ No se pudieron obtener usuarios existentes:", error);
+    }
+  }
+
   static async debugRegistration(userData: RegisterData) {
     try {
       await this.ensureConnection();
@@ -239,35 +336,25 @@ export class UsersAPI {
       
       // Asegurar ambos campos
       const passwordConfirm = userData.passwordConfirm || userData.password;
-  
-      // Prueba 1: Datos mínimos
-      const testData1 = {
+
+      // Prueba con diferentes enfoques
+      const testData = {
         email: userData.email,
         password: userData.password,
-        passwordConfirm: passwordConfirm, // ← Campo 1
-        confirmPassword: passwordConfirm, // ← Campo 2 (añadir este)
-        emailVisibility: true
+        passwordConfirm: passwordConfirm,
+        emailVisibility: true,
+        name: userData.name || userData.username || "Test User",
+        role: "user" // ← Valor fijo para probar
       };
       
-      console.log("🐛 DEBUG: Probando con datos mínimos", testData1);
+      console.log("🐛 DEBUG: Probando con datos:", testData);
       try {
-        const result1 = await pb.collection('users').create(testData1);
-        console.log("✅ DEBUG: Registro mínimo exitoso");
-        return result1;
-      } catch (error1: any) {
-        console.error("❌ DEBUG: Error con datos mínimos", error1.data);
-        
-        // Prueba 2: Con nombre
-        const testData2 = { ...testData1, name: userData.name || "Test User" };
-        console.log("🐛 DEBUG: Probando con nombre", testData2);
-        try {
-          const result2 = await pb.collection('users').create(testData2);
-          console.log("✅ DEBUG: Registro con nombre exitoso");
-          return result2;
-        } catch (error2: any) {
-          console.error("❌ DEBUG: Error con nombre", error2.data);
-          throw error2;
-        }
+        const result = await pb.collection('users').create(testData);
+        console.log("✅ DEBUG: Registro exitoso");
+        return result;
+      } catch (error: any) {
+        console.error("❌ DEBUG: Error completo:", error);
+        throw error;
       }
       
     } catch (error: any) {
@@ -311,47 +398,31 @@ export class UsersAPI {
       const testData = {
         email: `test_${Date.now()}@example.com`,
         password: 'testpassword123',
-        passwordConfirm: 'testpassword123', // ← Campo 1
-        confirmPassword: 'testpassword123', // ← Campo 2 (añadir este)
+        passwordConfirm: 'testpassword123',
         emailVisibility: true,
-        name: 'Test User'
+        name: 'Test User',
+        role: 'user'
       };
       
       console.log("🧪 Probando registro simple:", { 
         ...testData, 
         password: '***', 
-        passwordConfirm: '***',
-        confirmPassword: '***'
+        passwordConfirm: '***'
       });
       
       try {
         const result = await pb.collection('users').create(testData);
         console.log("✅ Prueba de registro exitosa");
+        
+        // Limpiar el usuario de prueba
+        await pb.collection('users').delete(result.id);
+        
         return { success: true };
       } catch (error: any) {
-        // LOGGING SUPER DETALLADO
-        console.error("=".repeat(80));
-        console.error("❌❌❌ ERROR COMPLETO DE REGISTRO ❌❌❌");
-        console.error("=".repeat(80));
-        
-        console.error("📍 Error object:", error);
-        console.error("📍 Error type:", typeof error);
-        
-        if (error.data) {
-          console.error("📋 error.data:", error.data);
-          if (error.data.data) {
-            console.error("🔍 Validation errors:", error.data.data);
-            Object.entries(error.data.data).forEach(([field, errorDetail]: [string, any]) => {
-              console.error(`   ${field}:`, errorDetail);
-            });
-          }
-        }
-        
-        console.error("=".repeat(80));
-        
+        console.error("❌ Error en prueba de registro:", error);
         return {
           success: false,
-          error: "Error completo en consola"
+          error: error.data?.message || "Error en registro de prueba"
         };
       }
       
@@ -363,7 +434,41 @@ export class UsersAPI {
       };
     }
   }
+
+  // NUEVO MÉTODO: Verificar la estructura de la colección
+  static async checkCollectionStructure(): Promise<void> {
+    try {
+      await this.ensureConnection();
+      const pb = getPB();
+      
+      console.log("🔍 Verificando estructura de la colección users...");
+      
+      // Intentar obtener información de la colección
+      try {
+        const collections = await pb.collections.getFullList();
+        const usersCollection = collections.find(col => col.name === 'users');
+        
+        if (usersCollection) {
+          console.log("📋 Campos de la colección users:");
+          usersCollection.schema.forEach((field: { name: any; type: any; required: any; system: any; options: any; }) => {
+            console.log(`   - ${field.name}: ${field.type} ${field.required ? '(REQUERIDO)' : ''} ${field.system ? '(SISTEMA)' : ''}`);
+            if (field.options) {
+              console.log(`     Opciones:`, field.options);
+            }
+          });
+        } else {
+          console.log("❌ No se encontró la colección users");
+        }
+      } catch (error) {
+        console.log("⚠ No se pudo obtener información detallada de la colección (probablemente por permisos)");
+      }
+      
+    } catch (error) {
+      console.error("❌ No se pudo verificar la estructura de la colección:", error);
+    }
+  }
 }
+
 if (typeof window !== 'undefined') {
   (window as any).UsersAPI = UsersAPI;
 }

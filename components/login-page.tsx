@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react" // ← Agregar useEffect
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Footer } from "./footer"
 import { Eye, EyeOff, Lock, User, Copy } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context" // Cambiado a contexts
+import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
@@ -23,15 +23,32 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showDemoAccount, setShowDemoAccount] = useState(false)
   const [copiedField, setCopiedField] = useState("")
+  const [shouldRedirect, setShouldRedirect] = useState(false) // ← Nuevo estado
 
   const { login, currentUser } = useAuth()
   const router = useRouter()
 
-  // Cuenta de administrador de prueba
+  // Cuenta de demostración
   const demoAccount = {
-    username: "admin@test.com",
+    username: "admin",
     password: "admin123"
   }
+
+  // useEffect para manejar la redirección
+  useEffect(() => {
+    if (currentUser && shouldRedirect) {
+      console.log("🔄 Redirigiendo a la página principal...")
+      router.push("/")
+    }
+  }, [currentUser, shouldRedirect, router])
+
+  // Si ya está logueado, marcar para redirección
+  useEffect(() => {
+    if (currentUser) {
+      console.log("👤 Usuario ya autenticado, preparando redirección...")
+      setShouldRedirect(true)
+    }
+  }, [currentUser])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,14 +56,17 @@ export function LoginPage() {
     setIsLoading(true)
 
     try {
+      console.log("🔐 Intentando login con:", formData.username)
       const success = await login(formData.username, formData.password)
       if (success) {
-        router.push("/")
+        console.log("✅ Login exitoso, preparando redirección...")
+        setShouldRedirect(true)
       } else {
         setError("Usuario o contraseña incorrectos")
       }
     } catch (err) {
-      setError("Error al iniciar sesión")
+      console.error("❌ Error en login:", err)
+      setError("Error al iniciar sesión. Intenta nuevamente.")
     } finally {
       setIsLoading(false)
     }
@@ -58,6 +78,7 @@ export function LoginPage() {
       password: demoAccount.password
     })
     setShowDemoAccount(false)
+    setError("")
   }
 
   const copyToClipboard = (text: string, field: string) => {
@@ -66,10 +87,16 @@ export function LoginPage() {
     setTimeout(() => setCopiedField(""), 2000)
   }
 
-  // Si ya está logueado, redirigir
-  if (currentUser) {
-    router.push("/")
-    return null
+  // Si estamos redirigiendo, mostrar loading o null
+  if (shouldRedirect) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004386] mx-auto"></div>
+          <p className="mt-4 text-[#004386]">Redirigiendo...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -84,7 +111,7 @@ export function LoginPage() {
               <div>
                 <CardTitle className="text-2xl sm:text-3xl font-bold text-[#004386]">Iniciar Sesión</CardTitle>
                 <CardDescription className="text-sm sm:text-base mt-2">
-                  Ingresa tus credenciales para acceder al sistema
+                  Ingresa tu nombre de usuario y contraseña para acceder al sistema
                 </CardDescription>
               </div>
             </CardHeader>
@@ -159,20 +186,26 @@ export function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-[#000000]">
-                    Usuario
+                    Nombre de usuario
                   </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="username"
                       type="text"
-                      placeholder="Ingresa tu usuario"
+                      placeholder="Ingresa tu nombre de usuario"
                       className="pl-10"
                       value={formData.username}
-                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, username: e.target.value })
+                        if (error) setError("")
+                      }}
                       required
                     />
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Usa tu nombre de usuario, no tu email
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -195,7 +228,10 @@ export function LoginPage() {
                       placeholder="Ingresa tu contraseña"
                       className="pl-10 pr-10"
                       value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, password: e.target.value })
+                        if (error) setError("")
+                      }}
                       required
                     />
                     <Button
