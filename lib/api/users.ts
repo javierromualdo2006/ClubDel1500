@@ -2,6 +2,7 @@
 import { getPB, ensureConnection } from '@/lib/pocketbase';
 
 export interface User {
+  isActive: boolean | undefined;
   id: string;
   email: string;
   username?: string;

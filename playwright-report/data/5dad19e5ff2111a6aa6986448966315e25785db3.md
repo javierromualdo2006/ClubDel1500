@@ -1,0 +1,86 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e13]
+  - generic [ref=e14]:
+    - banner [ref=e15]:
+      - generic [ref=e16]:
+        - button [ref=e18] [cursor=pointer]:
+          - img
+        - link "Club del 1500 Oficial" [ref=e20]:
+          - /url: /
+          - img "Club del 1500 Oficial" [ref=e22] [cursor=pointer]
+        - generic [ref=e23]:
+          - generic [ref=e25]: Admin
+          - button [ref=e26] [cursor=pointer]:
+            - img
+    - complementary [ref=e27]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - heading "Menú" [level=2] [ref=e30]
+          - button [ref=e31] [cursor=pointer]:
+            - img
+        - navigation [ref=e32]:
+          - link "Inicio" [ref=e33]:
+            - /url: /
+            - button "Inicio" [ref=e34] [cursor=pointer]
+          - link "Productos" [ref=e35]:
+            - /url: /productos
+            - button "Productos" [ref=e36] [cursor=pointer]
+          - link "Inicio de Sesión" [ref=e37]:
+            - /url: /login
+            - button "Inicio de Sesión" [ref=e38] [cursor=pointer]
+          - link "Calendario" [ref=e39]:
+            - /url: /calendario
+            - button "Calendario" [ref=e40] [cursor=pointer]
+          - link "Manuales del Auto" [ref=e41]:
+            - /url: /manuales
+            - button "Manuales del Auto" [ref=e42] [cursor=pointer]
+          - link "Gestión de Usuarios" [ref=e43]:
+            - /url: /usuarios
+            - button "Gestión de Usuarios" [ref=e44] [cursor=pointer]
+          - link "Enviar Emails" [ref=e45]:
+            - /url: /emails
+            - button "Enviar Emails" [ref=e46] [cursor=pointer]
+    - main [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e49]:
+          - heading [level=1]
+          - button "Nueva Sección" [ref=e50] [cursor=pointer]:
+            - img
+            - text: Nueva Sección
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - heading "Sección Principal" [level=2] [ref=e54]
+            - generic [ref=e55]:
+              - button "Editar" [ref=e56] [cursor=pointer]:
+                - img
+                - text: Editar
+              - button "Eliminar" [ref=e57] [cursor=pointer]:
+                - img
+                - text: Eliminar
+          - generic [ref=e58]:
+            - heading "Sección Principal" [level=2] [ref=e59]
+            - paragraph [ref=e60]: Lorem ipsum dolor sit amet consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    - contentinfo [ref=e61]:
+      - generic [ref=e62]:
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - heading "Redes Sociales" [level=3] [ref=e65]
+            - button "Editar" [ref=e66] [cursor=pointer]:
+              - img
+              - text: Editar
+          - generic [ref=e67]:
+            - link "Facebook" [ref=e68]:
+              - /url: https://facebook.com/empresa
+            - link "Twitter" [ref=e69]:
+              - /url: https://twitter.com/empresa
+            - link "Instagram" [ref=e70]:
+              - /url: https://instagram.com/empresa
+            - link "TikTok" [ref=e71]:
+              - /url: https://tiktok.com/@empresa
+        - paragraph [ref=e73]: © 2024 Sistema de Gestión. Todos los derechos reservados.
+```

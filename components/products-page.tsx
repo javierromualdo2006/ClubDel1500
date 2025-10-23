@@ -27,11 +27,11 @@ export function ProductsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [formData, setFormData] = useState({
-    name: "",
+    ProductName: "",
     description: "",
     price: "",
-    imageUrl: "",
-    mercadoLibreUrl: "",
+    url_img: "",
+    url_MercadoLibre: "",
   })
 
   useEffect(() => {
@@ -53,63 +53,65 @@ export function ProductsPage() {
 
   const filteredProducts = products.filter(
     (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      product.ProductName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const openAddDialog = () => {
     setEditingProduct(null)
-    setFormData({ name: "", description: "", price: "", imageUrl: "", mercadoLibreUrl: "" })
+    setFormData({
+      ProductName: "",
+      description: "",
+      price: "",
+      url_img: "",
+      url_MercadoLibre: "",
+    })
     setIsDialogOpen(true)
   }
 
   const openEditDialog = (product: Product) => {
     setEditingProduct(product)
     setFormData({
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      imageUrl: product.imageUrl || "",
-      mercadoLibreUrl: product.mercadoLibreUrl || "",
+      ProductName: product.ProductName,
+      description: product.description || "",
+      price: product.price.toString(),
+      url_img: product.url_img || "",
+      url_MercadoLibre: product.url_MercadoLibre || "",
     })
     setIsDialogOpen(true)
   }
 
   const handleSubmit = async () => {
-    if (formData.name && formData.description && formData.price && currentUser) {
+    if (formData.ProductName && formData.description && formData.price && currentUser) {
       try {
         if (editingProduct) {
-          const updatedProduct = await ProductsAPI.update(
-            editingProduct.id,
-            {
-              name: formData.name,
-              description: formData.description,
-              price: formData.price,
-              imageUrl: formData.imageUrl || undefined,
-              mercadoLibreUrl: formData.mercadoLibreUrl || undefined,
-            }
-          )
-
-          if (updatedProduct) {
-            await loadProducts()
-          }
+          const updatedProduct = await ProductsAPI.update(editingProduct.id, {
+            ProductName: formData.ProductName,
+            description: formData.description,
+            price: parseFloat(formData.price),
+            url_img: formData.url_img || undefined,
+            url_MercadoLibre: formData.url_MercadoLibre || undefined,
+          })
+          if (updatedProduct) await loadProducts()
         } else {
-          const newProduct = await ProductsAPI.create(
-            {
-              name: formData.name,
-              description: formData.description,
-              price: formData.price,
-              imageUrl: formData.imageUrl || undefined,
-              mercadoLibreUrl: formData.mercadoLibreUrl || undefined,
-              createdBy: currentUser.id,
-            }
-          )
-
+          await ProductsAPI.create({
+            ProductName: formData.ProductName,
+            description: formData.description,
+            price: parseFloat(formData.price),
+            url_img: formData.url_img || undefined,
+            url_MercadoLibre: formData.url_MercadoLibre || undefined,
+          })
           await loadProducts()
         }
 
         setIsDialogOpen(false)
-        setFormData({ name: "", description: "", price: "", imageUrl: "", mercadoLibreUrl: "" })
+        setFormData({
+          ProductName: "",
+          description: "",
+          price: "",
+          url_img: "",
+          url_MercadoLibre: "",
+        })
       } catch (error) {
         console.error("Error guardando producto:", error)
         alert("Error guardando producto")
@@ -122,7 +124,6 @@ export function ProductsPage() {
       const success = await ProductsAPI.delete(productId)
       if (success) {
         await loadProducts()
-        // Simple notification instead of popup
         const notification = document.createElement("div")
         notification.textContent = "Producto eliminado correctamente"
         notification.style.cssText = `
@@ -201,35 +202,30 @@ export function ProductsPage() {
                           : "Completa los datos para agregar un nuevo producto al catálogo."}
                       </DialogDescription>
                     </DialogHeader>
+
                     <div className="space-y-4 pt-4">
                       <div>
-                        <Label htmlFor="name" className="text-sm">
-                          Nombre del producto
-                        </Label>
+                        <Label htmlFor="ProductName" className="text-sm">Nombre del producto</Label>
                         <Input
-                          id="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          id="ProductName"
+                          value={formData.ProductName}
+                          onChange={(e) => setFormData({ ...formData, ProductName: e.target.value })}
                           placeholder="Ej: Laptop Gaming"
-                          className="text-sm"
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="description" className="text-sm">
-                          Descripción
-                        </Label>
+                        <Label htmlFor="description" className="text-sm">Descripción</Label>
                         <Input
                           id="description"
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                           placeholder="Ej: Laptop para gaming de alta gama"
-                          className="text-sm"
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="price" className="text-sm">
-                          Precio
-                        </Label>
+                        <Label htmlFor="price" className="text-sm">Precio</Label>
                         <Input
                           id="price"
                           type="number"
@@ -238,37 +234,32 @@ export function ProductsPage() {
                           value={formData.price}
                           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                           placeholder="Ej: 1299"
-                          className="text-sm"
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="mercadoLibreUrl" className="text-sm">
-                          Link de MercadoLibre 
-                        </Label>
+                        <Label htmlFor="url_MercadoLibre" className="text-sm">Link de MercadoLibre</Label>
                         <Input
-                          id="mercadoLibreUrl"
-                          value={formData.mercadoLibreUrl}
-                          onChange={(e) => setFormData({ ...formData, mercadoLibreUrl: e.target.value })}
+                          id="url_MercadoLibre"
+                          value={formData.url_MercadoLibre}
+                          onChange={(e) => setFormData({ ...formData, url_MercadoLibre: e.target.value })}
                           placeholder="https://articulo.mercadolibre.com.ar/..."
-                          className="text-sm"
                         />
                       </div>
+
                       <div>
-                        <Label htmlFor="image" className="text-sm">
-                          URL de la imagen del producto
-                        </Label>
+                        <Label htmlFor="url_img" className="text-sm">URL de la imagen del producto</Label>
                         <Input
-                          id="image-url"
-                          value={formData.imageUrl || ""}
-                          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                          id="url_img"
+                          value={formData.url_img}
+                          onChange={(e) => setFormData({ ...formData, url_img: e.target.value })}
                           placeholder="https://ejemplo.com/imagen.jpg"
-                          className="text-sm"
                         />
-                        {formData.imageUrl && (
+                        {formData.url_img && (
                           <div className="mt-2">
                             <p className="text-xs text-gray-600 mb-2">Vista previa:</p>
                             <img
-                              src={formData.imageUrl || "/placeholder.svg?height=120&width=120&text=Producto"}
+                              src={formData.url_img || "/placeholder.svg"}
                               alt="Vista previa del producto"
                               className="w-24 h-24 object-cover rounded border"
                               onError={(e) => {
@@ -278,6 +269,7 @@ export function ProductsPage() {
                           </div>
                         )}
                       </div>
+
                       <div className="flex gap-2 pt-4">
                         <Button onClick={handleSubmit} className="bg-[#004386] hover:bg-[#005ea6] flex-1 text-sm">
                           {editingProduct ? "Actualizar" : "Agregar"} Producto
@@ -304,10 +296,10 @@ export function ProductsPage() {
               <Card key={product.id} className="bg-[#d9d9d9] hover:shadow-lg transition-all duration-200">
                 <CardContent className="p-3">
                   <div className="aspect-square bg-white rounded-lg mb-2 overflow-hidden">
-                    {product.imageUrl ? (
+                    {product.url_img ? (
                       <img
-                        src={product.imageUrl || "/placeholder.svg"}
-                        alt={product.name}
+                        src={product.url_img}
+                        alt={product.ProductName}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
                         onError={(e) => {
                           e.currentTarget.src = "/placeholder.svg?height=150&width=150&text=Producto"
@@ -320,19 +312,19 @@ export function ProductsPage() {
                     )}
                   </div>
                   <h3 className="font-semibold text-xs sm:text-sm text-[#000000] mb-1 line-clamp-2 leading-tight">
-                    {product.name}
+                    {product.ProductName}
                   </h3>
                   <p className="text-xs text-[#000000] mb-2 line-clamp-2 leading-relaxed opacity-80">
                     {product.description}
                   </p>
-                  <p className="text-sm sm:text-base font-bold text-[#004386] mb-2">{product.price}</p>
+                  <p className="text-sm sm:text-base font-bold text-[#004386] mb-2">${product.price}</p>
 
-                  {product.mercadoLibreUrl && (
+                  {product.url_MercadoLibre && (
                     <div className="mb-2">
                       <Button
                         size="sm"
                         className="w-full bg-[#fff159] hover:bg-[#e6d950] text-black font-medium text-xs py-1.5 h-7"
-                        onClick={() => window.open(product.mercadoLibreUrl, "_blank")}
+                        onClick={() => window.open(product.url_MercadoLibre, "_blank")}
                       >
                         Ver en ML
                       </Button>
@@ -364,21 +356,6 @@ export function ProductsPage() {
               </Card>
             ))}
           </div>
-
-          {filteredProducts.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                {searchQuery
-                  ? "No se encontraron productos que coincidan con tu búsqueda"
-                  : "No hay productos disponibles"}
-              </div>
-              {searchQuery && (
-                <Button variant="outline" onClick={() => setSearchQuery("")} className="text-sm">
-                  Limpiar búsqueda
-                </Button>
-              )}
-            </div>
-          )}
         </div>
       </main>
       <Footer />
