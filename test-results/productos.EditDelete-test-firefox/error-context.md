@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e1]:
+- generic [active] [ref=e1]:
   - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
     - img [ref=e8]
   - alert [ref=e12]
@@ -55,7 +55,6 @@
                 - img [ref=e59]
                 - textbox "Nombre de usuario" [ref=e62]:
                   - /placeholder: Ingresa tu nombre de usuario
-                  - text: admin@gmail.com
               - paragraph [ref=e63]: Usa tu nombre de usuario, no tu email
             - generic [ref=e64]:
               - generic [ref=e65]:
@@ -64,7 +63,7 @@
                   - /url: /recuperar-contrasena
               - generic [ref=e68]:
                 - img [ref=e69]
-                - textbox "Contraseña" [active] [ref=e72]:
+                - textbox "Contraseña" [ref=e72]:
                   - /placeholder: Ingresa tu contraseña
                 - button [ref=e73] [cursor=pointer]:
                   - img

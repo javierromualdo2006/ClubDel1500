@@ -1,0 +1,89 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e13]
+  - generic [ref=e14]:
+    - banner [ref=e15]:
+      - generic [ref=e16]:
+        - button [ref=e18] [cursor=pointer]:
+          - img
+        - link "Club del 1500 Oficial" [ref=e20]:
+          - /url: /
+          - img "Club del 1500 Oficial" [ref=e22] [cursor=pointer]
+        - button [ref=e24] [cursor=pointer]:
+          - img
+    - complementary [ref=e25]:
+      - generic [ref=e26]:
+        - generic [ref=e27]:
+          - heading "Menú" [level=2] [ref=e28]
+          - button [ref=e29] [cursor=pointer]:
+            - img
+        - navigation [ref=e30]:
+          - link "Inicio" [ref=e31]:
+            - /url: /
+            - button "Inicio" [ref=e32] [cursor=pointer]
+          - link "Productos" [ref=e33]:
+            - /url: /productos
+            - button "Productos" [ref=e34] [cursor=pointer]
+          - link "Inicio de Sesión" [ref=e35]:
+            - /url: /login
+            - button "Inicio de Sesión" [ref=e36] [cursor=pointer]
+          - link "Calendario" [ref=e37]:
+            - /url: /calendario
+            - button "Calendario" [ref=e38] [cursor=pointer]
+          - link "Manuales del Auto" [ref=e39]:
+            - /url: /manuales
+            - button "Manuales del Auto" [ref=e40] [cursor=pointer]
+    - main [ref=e41]:
+      - generic [ref=e43]:
+        - generic [ref=e44]:
+          - img [ref=e46]
+          - generic [ref=e49]:
+            - generic [ref=e50]: Iniciar Sesión
+            - generic [ref=e51]: Ingresa tu nombre de usuario y contraseña para acceder al sistema
+        - generic [ref=e52]:
+          - generic [ref=e54]:
+            - heading "Cuenta de demostración" [level=3] [ref=e55]
+            - button "Mostrar" [ref=e56] [cursor=pointer]
+          - generic [ref=e57]:
+            - generic [ref=e58]:
+              - text: Nombre de usuario
+              - generic [ref=e59]:
+                - img [ref=e60]
+                - textbox "Nombre de usuario" [ref=e63]:
+                  - /placeholder: Ingresa tu nombre de usuario
+              - paragraph [ref=e64]: Usa tu nombre de usuario, no tu email
+            - generic [ref=e65]:
+              - generic [ref=e66]:
+                - generic [ref=e67]: Contraseña
+                - link "¿Olvidaste tu contraseña?" [ref=e68]:
+                  - /url: /recuperar-contrasena
+              - generic [ref=e69]:
+                - img [ref=e70]
+                - textbox "Contraseña" [ref=e73]:
+                  - /placeholder: Ingresa tu contraseña
+                - button [ref=e74] [cursor=pointer]:
+                  - img
+            - button "Iniciar Sesión" [ref=e75] [cursor=pointer]
+          - paragraph [ref=e77]:
+            - text: ¿No tienes una cuenta?
+            - link "Regístrate aquí" [ref=e78]:
+              - /url: /registro
+    - contentinfo [ref=e79]:
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - heading "Redes Sociales" [level=3] [ref=e83]
+          - generic [ref=e84]:
+            - link "Facebook" [ref=e85]:
+              - /url: https://facebook.com/empresa
+            - link "Twitter" [ref=e86]:
+              - /url: https://twitter.com/empresa
+            - link "Instagram" [ref=e87]:
+              - /url: https://instagram.com/empresa
+            - link "TikTok" [ref=e88]:
+              - /url: https://tiktok.com/@empresa
+        - paragraph [ref=e90]: © 2024 Sistema de Gestión. Todos los derechos reservados.
+```
