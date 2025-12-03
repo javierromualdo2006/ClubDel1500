@@ -1,15 +1,22 @@
+// test-utils.tsx
 import type React from "react"
 import type { ReactElement } from "react"
-import { render, type RenderOptions } from "@testing-library/react"
+import { render as rtlRender, type RenderOptions } from "@testing-library/react"
 import { AuthProvider } from "@/contexts/auth-context"
 
-// Custom render function that includes providers
+// Wrapper con tus providers globales
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return <AuthProvider>{children}</AuthProvider>
 }
 
-const customRender = (ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) =>
-  render(ui, { wrapper: AllTheProviders, ...options })
+// Render personalizado
+const render = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, "wrapper">
+) => rtlRender(ui, { wrapper: AllTheProviders, ...options })
 
+// Re-exportar todo lo de Testing Library
 export * from "@testing-library/react"
-export { customRender as render }
+
+// Exportar el render custom
+export { render }

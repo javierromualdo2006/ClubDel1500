@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useRef, type ReactNode 
 import { UsersAPI, type RegisterData, type User } from "@/lib/api/users";
 import { ensureConnection } from "@/lib/pocketbase";
 
-interface AuthContextType {
+export interface AuthContextType {
   currentUser: User | null;
   users: User[];
   login: (email: string, password: string) => Promise<boolean>;
@@ -41,16 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const connected = await ensureConnection("http://127.0.0.1:8090");
           
           if (!connected) {
-            console.error("❌ No se pudo conectar a PocketBase");
+            // En entorno de tests podemos seguir usando sesiones mockeadas desde localStorage
+            console.error("❌ No se pudo conectar a PocketBase (continuando con posible sesión local)");
             setConnectionStatus('error');
-            if (isMountedRef.current) {
-              setLoading(false);
-            }
-            return;
+          } else {
+            setConnectionStatus('connected');
+            console.log("✅ Conectado a PocketBase");
           }
-
-          setConnectionStatus('connected');
-          console.log("✅ Conectado a PocketBase");
 
           const user = await UsersAPI.getCurrentUser();
           if (isMountedRef.current && user) {

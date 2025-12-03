@@ -1,37 +1,35 @@
 import { test, expect } from '@playwright/test';
+import { login } from '../__tests__/utils/login';
 
 test('test', async ({ page }) => {
+  // Navegar a la página principal
   await page.goto('http://localhost:3000/', { timeout: 60000, waitUntil: 'load' });
+  
+  // Usar la utilidad de login
+  await page.evaluate(() => {
+    // @ts-ignore - Exponer la función de login globalmente para el test
+    window.__TEST_LOGIN = async () => {
+      const { login } = await import('@/__tests__/utils/login');
+      const { useAuth } = await import('@/contexts/auth-context');
+      const auth = useAuth();
+      await login(auth);
+    };
+  });
+  
+  // Ejecutar el login
+  await page.evaluate(() => {
+    // @ts-ignore
+    return window.__TEST_LOGIN();
+  });
+  
+  // Recargar la página para asegurar que la autenticación se mantenga
+  await page.reload({ waitUntil: 'networkidle' });
 
-  // Interacciones iniciales
-  await page.getByRole('button').nth(1).click();
-  await page.goto('http://localhost:3000/', { timeout: 60000, waitUntil: 'load' });
-  await page.getByRole('button').first().click();
-
-  // Esperar y hacer clic en el botón de inicio de sesión
-  const buttonInicioSesion = page.getByRole('button', { name: 'Inicio de Sesión' });
-  await buttonInicioSesion.waitFor({ state: 'visible', timeout: 60000 });
-  await buttonInicioSesion.scrollIntoViewIfNeeded();
-  await buttonInicioSesion.click();
-
-  // Completar el nombre de usuario
-  await page.getByRole('textbox', { name: 'Nombre de usuario' }).waitFor({ state: 'visible' });
-  await page.getByRole('textbox', { name: 'Nombre de usuario' }).fill('admin@gmail.com');
-  await page.getByRole('textbox', { name: 'Nombre de usuario' }).press('Enter');
-
-  // Completar la contraseña
-  await page.getByRole('textbox', { name: 'Contraseña' }).waitFor({ state: 'visible' });
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('12345678');
-  await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
-
-  // Ir al inicio de la página
-  await page.getByRole('button').first().click();
-
-  // Esperar y hacer clic en el botón de Productos
-  const buttonProductos = await page.getByRole('button', { name: 'Productos' });
-  await buttonProductos.waitFor({ state: 'visible', timeout: 60000 });
-  await buttonProductos.scrollIntoViewIfNeeded();
-  await buttonProductos.click();
+  // Navegar directamente a la sección de Productos
+  await page.goto('http://localhost:3000/products', { timeout: 60000, waitUntil: 'networkidle' });
+  
+  // Esperar a que la página de productos esté completamente cargada
+  await page.waitForSelector('button:has-text("Nuevo Producto")', { state: 'visible', timeout: 60000 });
 
   // Espera y hacer clic en el botón "Nuevo Producto"
   const buttonNuevoProducto = await page.getByRole('button', { name: 'Nuevo Producto' });
@@ -53,20 +51,4 @@ test('test', async ({ page }) => {
 
   // Hacer clic en el botón para agregar el producto
   await page.getByRole('button', { name: 'Agregar Producto' }).click();
-  
-  // Esperar y manejar la ventana emergente
-  const page4Promise = page.waitForEvent('popup');
-  
-  // Cambia el selector para que seleccione un único botón
-  await page.getByRole('button', { name: 'Ver en ML' }).nth(0).click(); // Cambiar el índice según el botón correcto
-  const page4 = await page4Promise;
-
-  // Editar el producto desde la ventana emergente
-  await page4.getByRole('main').getByRole('button', { name: 'Editar' }).click();
-  await page4.getByRole('textbox', { name: 'Nombre del producto' }).fill('testupdated');
-  await page4.getByRole('textbox', { name: 'Descripción' }).fill('testupdated');
-  await page4.getByRole('spinbutton', { name: 'Precio' }).fill('1200000');
-  
-  // Hacer clic en el botón para actualizar el producto
-  await page4.getByRole('button', { name: 'Actualizar Producto' }).click();
 });

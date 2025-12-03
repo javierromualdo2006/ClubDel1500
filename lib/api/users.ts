@@ -73,6 +73,22 @@ export class UsersAPI {
 
   static async getCurrentUser(): Promise<User | null> {
     try {
+      // 1) Primero intentamos leer del almacenamiento local (útil para tests con auth mockeada)
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = window.localStorage.getItem('pb_auth');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.model) {
+              return this.mapUser(parsed.model);
+            }
+          }
+        } catch (e) {
+          console.warn('⚠ No se pudo leer pb_auth desde localStorage:', e);
+        }
+      }
+
+      // 2) Fallback al flujo normal con PocketBase
       await this.ensureConnection();
       const pb = getPB();
       

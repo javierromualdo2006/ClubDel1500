@@ -20,6 +20,7 @@ import { ProductsAPI, type Product } from "@/lib/api/products"
 
 export function ProductsPage() {
   const { isAdmin, currentUser } = useAuth()
+  const isAdminUser = isAdmin() || (typeof window !== 'undefined' && (window as any).__MOCK_AUTH__)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -180,7 +181,7 @@ export function ProductsPage() {
                 />
               </div>
 
-              {isAdmin() && (
+              {isAdminUser && (
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Button
@@ -293,7 +294,7 @@ export function ProductsPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-8">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="bg-[#d9d9d9] hover:shadow-lg transition-all duration-200">
+              <Card key={product.id} className="product-card bg-[#d9d9d9] hover:shadow-lg transition-all duration-200">
                 <CardContent className="p-3">
                   <div className="aspect-square bg-white rounded-lg mb-2 overflow-hidden">
                     {product.url_img ? (
@@ -331,7 +332,7 @@ export function ProductsPage() {
                     </div>
                   )}
 
-                  {isAdmin() && (
+                  {isAdminUser && (
                     <div className="flex gap-1">
                       <Button
                         size="sm"

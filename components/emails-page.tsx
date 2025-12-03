@@ -61,9 +61,29 @@ export function EmailsPage() {
     return null
   }
 
-  const allUsers = includeAdmin ? users : users.filter((user) => user.id !== currentUser.id)
-  const activeUsers = allUsers.filter((user) => user.isActive)
-  const emailEnabledUsers = activeUsers.filter((user) => user.emailNotifications)
+  // Debug logging to help diagnose user data issues
+  console.log('All users:', users);
+  
+  // Filter users based on admin inclusion
+  const allUsers = includeAdmin ? users : users.filter((user) => user.id !== currentUser?.id);
+  console.log('Filtered users (allUsers):', allUsers);
+
+  // Filter active users with debug logging
+  const activeUsers = allUsers.filter((user) => {
+    const isActive = user.isActive === true || user.isActive === undefined; // Handle undefined as active by default
+    console.log(`User ${user.email} - isActive: ${isActive}, emailNotifications: ${user.emailNotifications}`);
+    return isActive;
+  });
+  console.log('Active users:', activeUsers);
+
+  // Filter users with email notifications enabled
+  const emailEnabledUsers = activeUsers.filter((user) => {
+    // Consider emailNotifications as enabled if it's true or undefined (default to true)
+    const hasNotifications = user.emailNotifications !== false; // true if undefined or true
+    console.log(`User ${user.email} - emailNotifications: ${user.emailNotifications}, hasNotifications: ${hasNotifications}`);
+    return hasNotifications;
+  });
+  console.log('Email enabled users:', emailEnabledUsers);
 
   const handleSendTestEmail = async () => {
     if (!emailData.subject || !emailData.message) {
