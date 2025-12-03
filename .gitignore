@@ -126,4 +126,6 @@ temp/
 /test-results/         # Resultados temporales (screenshots, traces)
 /playwright-report/    # Reportes HTML generados
 /blob-report/          # Reportes en formato blob (si los generas)
-/playwright/.cache/    # Cache interna
+/playwright/.cache/    # Cache internapb_data/
+playwright-report/
+test-results/
