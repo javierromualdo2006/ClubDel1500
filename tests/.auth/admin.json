@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "__next_hmr_refresh_hash__",
-      "value": "7d653bde099d9cbb35e31be7d32eab22633457081244afec",
+      "value": "a282eb21450dbd5c35e31be7d32eab22633457081244afec",
       "domain": "localhost",
       "path": "/",
       "expires": -1,
@@ -21,7 +21,7 @@
         },
         {
           "name": "pb_auth",
-          "value": "{\"token\":\"mock-jwt-token\",\"model\":{\"id\":\"mock-user-id\",\"email\":\"admin@gmail.com\",\"username\":\"admin\",\"name\":\"Admin User\",\"avatar\":\"\",\"role\":\"admin\",\"verified\":true,\"created\":\"2025-12-02T23:23:31.586Z\",\"updated\":\"2025-12-02T23:23:31.586Z\",\"emailVisibility\":true,\"feature\":null,\"archive\":false,\"emailNotifications\":true,\"tokenRecy\":null}}"
+          "value": "{\"token\":\"mock-jwt-token\",\"model\":{\"id\":\"mock-user-id\",\"email\":\"admin@gmail.com\",\"username\":\"admin\",\"name\":\"Admin User\",\"avatar\":\"\",\"role\":\"admin\",\"verified\":true,\"created\":\"2025-12-03T01:01:02.920Z\",\"updated\":\"2025-12-03T01:01:02.920Z\",\"emailVisibility\":true,\"feature\":null,\"archive\":false,\"emailNotifications\":true,\"tokenRecy\":null}}"
         }
       ]
     }
